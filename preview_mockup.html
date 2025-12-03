@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Heirloom Preview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              serif: ['Merriweather', 'serif'],
+            },
+            colors: {
+              brand: {
+                50: '#fdf8f6',
+                100: '#f2e8e5',
+                200: '#eaddd7',
+                300: '#e0cec7',
+                400: '#d2bab0',
+                500: '#a18072',
+                600: '#8a6a5c',
+                700: '#725548',
+                800: '#5d453b',
+                900: '#4a372f',
+              },
+              paper: {
+                50: '#fdfbf7',
+                100: '#f8f5f2',
+                200: '#f4ebe4',
+                300: '#e3d5ca',
+              }
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      body {
+        background-color: #fdf8f6;
+        color: #4a372f;
+      }
+      /* Custom scrollbar */
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #d2bab0; border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: #a18072; }
+    </style>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+  </head>
+  <body>
+    <div class="flex h-screen bg-brand-50/30 text-brand-900 font-sans overflow-hidden">
+      
+      <!-- Sidebar Mockup -->
+      <aside class="hidden md:flex w-20 lg:w-64 flex-col border-r border-brand-200 bg-paper-100/50 backdrop-blur-sm h-full transition-all duration-300">
+         <div class="h-16 flex items-center justify-center lg:justify-start lg:px-6 border-b border-brand-100">
+            <div class="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white font-serif font-bold text-xl">H</div>
+            <span class="ml-3 font-serif font-bold text-lg hidden lg:block text-brand-800">Heirloom</span>
+         </div>
+         <nav class="flex-1 py-6 flex flex-col gap-2 px-2 lg:px-4">
+            <button class="flex items-center gap-3 px-3 py-3 rounded-xl bg-brand-100 text-brand-800 font-medium transition-colors">
+                <i data-lucide="home" class="w-5 h-5"></i>
+                <span class="hidden lg:block">Home</span>
+            </button>
+            <button class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-brand-50 text-brand-500 font-medium transition-colors">
+                <i data-lucide="book-open" class="w-5 h-5"></i>
+                <span class="hidden lg:block">Journal</span>
+            </button>
+            <button class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-brand-50 text-brand-500 font-medium transition-colors">
+                <i data-lucide="feather" class="w-5 h-5"></i>
+                <span class="hidden lg:block">Biographer</span>
+            </button>
+         </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="flex-1 flex flex-col h-full overflow-hidden relative pt-16 md:pt-0 bg-brand-50/30">
+        <div class="h-full w-full flex flex-col p-4 md:p-6 lg:p-8 overflow-y-auto lg:overflow-hidden">
+            <div class="max-w-6xl mx-auto w-full h-full flex flex-col gap-6 lg:gap-8 pb-20 lg:pb-0">
+                
+                <!-- Greeting -->
+                <div class="flex-shrink-0">
+                    <h1 class="text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-brand-900 tracking-tight">
+                        Good Morning, Friend.
+                    </h1>
+                    <p class="text-brand-400 font-medium mt-2 text-sm uppercase tracking-widest">
+                        <script>document.write(new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }))</script>
+                    </p>
+                </div>
+
+                <!-- Main Content Area -->
+                <div class="flex-1 min-h-0 flex flex-col gap-6 lg:gap-8">
+                    
+                    <!-- Recorder Placeholder -->
+                    <div class="flex-1 min-h-[350px] shadow-2xl shadow-brand-900/20 rounded-3xl overflow-hidden relative bg-gray-900 flex flex-col items-center justify-center text-white">
+                        <div class="absolute inset-0 bg-gradient-to-b from-gray-800 to-gray-950"></div>
+                        <div class="relative z-10 flex flex-col items-center gap-6">
+                            <div class="w-20 h-20 rounded-full bg-brand-500/20 flex items-center justify-center animate-pulse">
+                                <div class="w-16 h-16 rounded-full bg-brand-500 flex items-center justify-center shadow-lg shadow-brand-500/50 cursor-pointer hover:scale-105 transition-transform">
+                                    <i data-lucide="mic" class="w-8 h-8 text-white"></i>
+                                </div>
+                            </div>
+                            <p class="text-brand-100 font-medium tracking-wide">Tap to record your thoughts</p>
+                        </div>
+                        <!-- Fake Waveform -->
+                        <div class="absolute bottom-0 left-0 right-0 h-24 flex items-end justify-center gap-1 px-8 opacity-30">
+                            <div class="w-1 h-8 bg-brand-400 rounded-full"></div>
+                            <div class="w-1 h-12 bg-brand-400 rounded-full"></div>
+                            <div class="w-1 h-6 bg-brand-400 rounded-full"></div>
+                            <div class="w-1 h-16 bg-brand-400 rounded-full"></div>
+                            <div class="w-1 h-10 bg-brand-400 rounded-full"></div>
+                            <div class="w-1 h-4 bg-brand-400 rounded-full"></div>
+                            <div class="w-1 h-14 bg-brand-400 rounded-full"></div>
+                            <div class="w-1 h-8 bg-brand-400 rounded-full"></div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Grid -->
+                    <div class="flex-shrink-0 grid grid-cols-1 md:grid-cols-2 gap-6 h-auto lg:h-[240px]">
+                        
+                        <!-- Biographer Card -->
+                        <div class="bg-white rounded-3xl p-6 lg:p-8 border border-brand-100 shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between min-h-[200px] relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-brand-50 rounded-full -mr-10 -mt-10 blur-2xl opacity-50"></div>
+                            <div class="relative z-10">
+                                <div class="flex items-center gap-2 mb-4">
+                                    <div class="p-2 bg-brand-100 text-brand-600 rounded-lg">
+                                        <i data-lucide="feather" class="w-5 h-5"></i>
+                                    </div>
+                                    <span class="text-xs font-bold uppercase tracking-widest text-brand-400">Current Chapter</span>
+                                </div>
+                                <h3 class="text-xl lg:text-2xl font-serif font-bold text-brand-900 mb-1">
+                                    Chapter 1: The Beginning
+                                </h3>
+                                <p class="text-brand-500 text-sm leading-relaxed mt-2">
+                                    The story continues. Answer a question to flesh out this period of your life.
+                                </p>
+                            </div>
+                            <div class="mt-4 flex items-center text-xs font-bold text-brand-400 uppercase tracking-wide group-hover:text-brand-600 transition-colors">
+                                Continue Writing <i data-lucide="arrow-right" class="w-3 h-3 ml-1"></i>
+                            </div>
+                        </div>
+
+                        <!-- Quote Card -->
+                        <div class="bg-[#fdfbf9] rounded-3xl p-6 lg:p-8 border border-brand-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between min-h-[200px] relative overflow-hidden">
+                            <div class="h-full flex flex-col justify-between relative z-10">
+                                <div class="absolute -bottom-4 -right-4">
+                                    <i data-lucide="quote" class="w-32 h-32 text-brand-100 opacity-30 rotate-12"></i>
+                                </div>
+                                <div class="relative z-10">
+                                    <div class="flex items-center gap-2 mb-4">
+                                        <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                                            <i data-lucide="sparkles" class="w-5 h-5"></i>
+                                        </div>
+                                        <span class="text-xs font-bold uppercase tracking-widest text-blue-400">Daily Inspiration</span>
+                                    </div>
+                                    <blockquote class="font-serif text-lg text-brand-800 italic leading-relaxed">
+                                        "The only way to do great work is to love what you do."
+                                    </blockquote>
+                                </div>
+                                <cite class="text-xs font-bold text-brand-400 uppercase tracking-widest not-italic mt-4 block">
+                                    — Steve Jobs
+                                </cite>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+      </main>
+    </div>
+    <script>
+      lucide.createIcons();
+    </script>
+  </body>
+</html>

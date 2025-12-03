@@ -1,0 +1,9 @@
+{
+  "name": "Copy of Heirloom",
+  "description": "A voice-first journal that automatically transcribes your thoughts into text using Gemini AI.",
+  "requestFramePermissions": [
+    "microphone",
+    "geolocation",
+    "camera"
+  ]
+}
