@@ -1,9 +1,9 @@
 
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { AiResponse, JournalEntry, LocationData, Chapter, Prompt } from "../types";
 import { getUserIdentityImage } from "./dbService";
 import { blobToBase64 } from "./audioUtils";
+import { analyzeEntryFunction } from "./firebaseConfig";
 
 // Retry helper for handling API overload (503) errors
 const retryWithBackoff = async <T>(
@@ -47,155 +47,51 @@ export const analyzeEntry = async (
     location?: LocationData
 ): Promise<AiResponse> => {
     try {
-        if (!process.env.API_KEY) throw new Error("API Key not found");
-
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        const modelId = "gemini-2.5-flash";
-
         const isAudio = input instanceof Blob;
 
-        const promptText = promptContext
-            ? `The user is answering this specific question: "${promptContext}".`
-            : "The user is providing a free-form journal entry.";
-
-        const locationText = location
-            ? `The user is recording this at Latitude: ${location.latitude}, Longitude: ${location.longitude}. Use the Google Maps tool to identify this location if possible.`
-            : "";
-
-        const systemPrompt = `
-    ${isAudio ? "You are a dedicated personal archivist. Listen to this audio journal entry" : "You are a dedicated personal archivist. Analyze this written journal entry"} ${imageBlob ? "and the attached image" : ""}. ${promptText} ${locationText}
-    
-    Task 1: Transcription
-       - ${isAudio ? "Transcribe the audio to clear, natural English. Preserve the speaker's unique voice, cadence, and emotion. Fix stuttering or non-speech fillers (um, ah) unless they add meaning, but do NOT rewrite or summarize the speech. It must be a faithful transcription." : "Proofread the text for clarity while maintaining the original voice."}
-       - Return this as 'transcription'.
-    
-    Task 2: Deep Analysis
-       - Title: Create a poetic and meaningful title.
-       - Summary: Write a compassionate 2-3 sentence summary in the second person ("You..."). Connect the thoughts to the user's values.
-       - Mood: Identify the primary emotional tone using exactly one word.
-       - Tags: 3-5 relevant thematic tags.
-       - Insights: Extract 3-6 distinct insights (philosophy, memory, advice, observation, question). These should be valuable takeaways from the entry.
-       ${location ? "- Location: Identify the specific place name and address using Google Maps." : ""}
-    
-    Return strictly JSON.
-    `;
-
-        // Prepare contents
-        const parts: any[] = [];
-
-        // Input Part (Audio or Text)
+        // Prepare input data for Cloud Function
+        let inputData: any;
         if (isAudio) {
             const base64Audio = await blobToBase64(input as Blob);
-            parts.push({
-                inlineData: {
-                    mimeType: (input as Blob).type || 'audio/webm',
-                    data: base64Audio
-                }
-            });
+            inputData = {
+                data: base64Audio,
+                mimeType: (input as Blob).type || 'audio/webm'
+            };
         } else {
-            parts.push({ text: `User Entry Text: "${input}"` });
+            inputData = input;
         }
 
-        // Image Part
+        // Prepare image data if present
+        let imageData: any = undefined;
         if (imageBlob) {
             const base64Image = await blobToBase64(imageBlob);
-            parts.push({
-                inlineData: {
-                    mimeType: imageBlob.type || 'image/jpeg',
-                    data: base64Image
-                }
-            });
-        }
-
-        // Instructions Part
-        parts.push({ text: systemPrompt });
-
-        // Config
-        const tools: any[] = [];
-        let toolConfig: any = undefined;
-
-        if (location) {
-            tools.push({ googleMaps: {} });
-            toolConfig = {
-                retrievalConfig: {
-                    latLng: {
-                        latitude: location.latitude,
-                        longitude: location.longitude
-                    }
-                }
+            imageData = {
+                data: base64Image,
+                mimeType: imageBlob.type || 'image/jpeg'
             };
         }
 
-        const generationConfig: any = {
-            tools: tools.length > 0 ? tools : undefined,
-            toolConfig: toolConfig,
-            // REMOVED: thinkingConfig is not compatible with responseSchema in gemini-2.5-flash
-        };
-
-        if (!location) {
-            generationConfig.responseMimeType = "application/json";
-            generationConfig.responseSchema = {
-                type: Type.OBJECT,
-                properties: {
-                    transcription: { type: Type.STRING },
-                    summary: { type: Type.STRING },
-                    title: { type: Type.STRING },
-                    mood: { type: Type.STRING },
-                    locationName: { type: Type.STRING, nullable: true },
-                    locationAddress: { type: Type.STRING, nullable: true },
-                    tags: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    insights: {
-                        type: Type.ARRAY,
-                        items: {
-                            type: Type.OBJECT,
-                            properties: {
-                                type: { type: Type.STRING, enum: ['philosophy', 'memory', 'advice', 'observation', 'question'] },
-                                title: { type: Type.STRING },
-                                content: { type: Type.STRING }
-                            },
-                            required: ['type', 'title', 'content']
-                        }
-                    }
-                },
-                required: ["transcription", "summary", "title", "mood", "tags", "insights"]
-            };
-        } else {
-            parts.push({
-                text: `
-        Output must be valid JSON following this structure:
-        {
-            "transcription": "string",
-            "summary": "string",
-            "title": "string",
-            "mood": "string",
-            "locationName": "string or null",
-            "locationAddress": "string or null",
-            "tags": ["string"],
-            "insights": [{ "type": "philosophy|memory|advice|observation|question", "title": "string", "content": "string" }]
-        }
-        `});
-        }
-
-        // Wrap the API call in retry logic to handle temporary overload
-        const response = await retryWithBackoff(async () => {
-            return await ai.models.generateContent({
-                model: modelId,
-                contents: { parts },
-                config: generationConfig
-            });
+        // Call the Cloud Function
+        const response = await analyzeEntryFunction({
+            input: inputData,
+            isAudio,
+            promptContext,
+            imageData,
+            location
         });
 
-        const text = response.text;
-        if (!text) throw new Error("No response text from Gemini");
+        const result = response.data as any;
+        if (!result.success) {
+            throw new Error('Cloud Function returned error');
+        }
 
-        const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        return JSON.parse(cleanText) as AiResponse;
+        return result.data as AiResponse;
 
     } catch (error: any) {
-        console.error("Gemini API Error:", error);
+        console.error("Cloud Function Error:", error);
         return {
             transcription: typeof input === 'string' ? input : `Error processing audio: ${error.message || "Unknown error"}`,
-            summary: "Processing failed. Please check your API Key or connection.",
+            summary: "Processing failed. Please check your connection.",
             title: "Error Entry",
             mood: "Error",
             tags: [],
@@ -203,6 +99,7 @@ export const analyzeEntry = async (
         };
     }
 };
+
 
 export const lookupLocation = async (query: string): Promise<{ name: string, address: string, url?: string } | null> => {
     if (!process.env.API_KEY || !query.trim()) return null;
