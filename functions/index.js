@@ -1,32 +1,48 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
-
-const {setGlobalOptions} = require("firebase-functions");
-const {onRequest} = require("firebase-functions/https");
+const { onCall } = require("firebase-functions/v2/https");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 const logger = require("firebase-functions/logger");
 
-// For cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// In the v1 API, each function can only serve one request per container, so
-// this will be the maximum concurrent request count.
-setGlobalOptions({ maxInstances: 10 });
+// Initialize the Gemini AI with API key from environment
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
+/**
+ * Cloud Function to generate journal entries using Gemini AI
+ * This keeps the API key secure on the server side
+ */
+exports.generateJournalEntry = onCall(async (request) => {
+    try {
+        const { prompt, imageData } = request.data;
 
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+        if (!prompt) {
+            throw new Error("Prompt is required");
+        }
+
+        logger.info("Generating journal entry", { prompt: prompt.substring(0, 100) });
+
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+
+        let result;
+        if (imageData) {
+            // Handle image + text prompt
+            const imagePart = {
+                inlineData: {
+                    data: imageData.split(",")[1], // Remove data:image/... prefix
+                    mimeType: "image/jpeg",
+                },
+            };
+            result = await model.generateContent([prompt, imagePart]);
+        } else {
+            // Handle text-only prompt
+            result = await model.generateContent(prompt);
+        }
+
+        const response = await result.response;
+        const text = response.text();
+
+        logger.info("Successfully generated content");
+        return { success: true, text };
+    } catch (error) {
+        logger.error("Error generating content:", error);
+        throw new Error(`Failed to generate content: ${error.message}`);
+    }
+});
