@@ -17,4 +17,4 @@ const app = initializeApp(firebaseConfig);
 const functions = getFunctions(app);
 
 // Export callable function
-export const analyzeEntryFunction = httpsCallable(functions, 'analyzeEntry');
+export const processAIRequest = httpsCallable(functions, 'processAIRequest');
